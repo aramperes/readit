@@ -4,6 +4,14 @@ const { glob } = require('glob-gitignore');
 const path = require("path");
 const { encoding_for_model } = require("@dqbd/tiktoken");
 
+const args = [...process.argv].splice(2);
+if (args.length < 3) {
+    console.error('Syntax: node . <path to repo> <url of repo> <primary language>');
+    console.error('Example: node . ./ github.com/aramperes/readit nodejs');
+    process.exit(2);
+}
+
+const [repoPath, repoUrl, repoLanguage] = args;
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -105,13 +113,14 @@ async function createReadme(repoPath, repoUrl, repoLanguage) {
     const defaultPrompts = [
         `Your purpose is to generate a real-world README file for a GitHub project, in Markdown, that explains the purpose of the following project, which will be described to you file by file.
         The README should include reason why you would use this package, how to install and run it, and also add a bit about high-level architecture. Include shields.io badges relevant to the project.
-        You must respond with a full markdown README  that looks like it would be the public GitHub README documenting the project, maximizing the number of words, and separating into multiple sections: Introduction, Installation, High-level architecture, How to contribute, License.
-        Title the README with the name of the project. Generate at least 2000 words introducing the project with why someone might want to use it.
-        In the high-level architecture, only list code files. Do not list files you have not been told about. Do not list non-code files like the license, documentation, dependency management, etc.
+        You must respond with a full markdown README  that looks like it would be the public GitHub README documenting the project, maximizing the number of words, and separating into these sections: Introduction, Installation, High-level architecture, How to contribute, License.
+        Title the README with the name of the project. Generate at least 3 paragraphs introducing the project with why someone might want to use it.
+        In the high-level architecture, only list code files. Do not list files you have not been told about.
+        In the architecture, do not list files that are not code, do not list the license, or documentation, or dependency-related files, etc.
         Do not invent instructions you have not been told about in the summaries of the code.
         If the repo has a file with a list of dependencies (package.json or equivalent), do not list the dependencies in the README. Do not list or describe config files like JSON/XML/TOML etc.
         If the project has a license, tell the users to read the file directly and do not explain the details of the license in the README.`,
-        `The project you are generating this README for is written in ${repoLanguage} hosted at ${repoUrl}. Here is a high-level summary of each source file. The first line of each message is the name of the file. Here we go:`,
+        `The project you are generating this README for is written in ${repoLanguage} hosted at ${repoUrl}. Here is a high-level summary of each file in the repo. The first line of each message is the name of the file. Here we go:`,
     ]
         .map(content => { return { role: "system", content } });
 
@@ -131,4 +140,5 @@ async function createReadme(repoPath, repoUrl, repoLanguage) {
 
 
 // createReadme('/home/amperes/dev/onetun', 'github.com/aramperes/onetun', 'rust');
-createReadme('/home/amperes/dev/readit', 'github.com/aramperes/readit', 'nodejs');
+// createReadme('/home/amperes/dev/readit', 'github.com/aramperes/readit', 'nodejs');
+createReadme(repoPath, repoUrl, repoLanguage);
