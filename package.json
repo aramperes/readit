@@ -1,0 +1,11 @@
+{
+  "name": "readit",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@dqbd/tiktoken": "^1.0.7",
+    "glob-gitignore": "^1.0.14",
+    "openai": "^3.2.1"
+  }
+}
