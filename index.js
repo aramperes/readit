@@ -41,7 +41,7 @@ async function createReadme(repoPath, repoUrl, repoLanguage) {
     console.log('Project source code is a total of', totalSourceTokens, 'tokens', 'to be summarized to', targetTokens, 'tokens')
 
     const filePrompts = fileSources.map((src) => {
-        const expectedResponseSize = Math.max(25, Math.floor(targetTokens * (src.size / totalSourceTokens)));
+        const expectedResponseSize = Math.floor(targetTokens * (src.size / totalSourceTokens));
         const content = codeSummaryPrompt(repoLanguage, src.src, src.code, expectedResponseSize);
 
         return {
@@ -58,17 +58,23 @@ async function createReadme(repoPath, repoUrl, repoLanguage) {
     for (let filePrompt of filePrompts) {
         const { prompt, src, maxTokens } = filePrompt;
 
-        console.log(`Summarizing ${src.src}... (${src.size} tokens, return max ${maxTokens})`);
+        let summary;
+        if (maxTokens <= 25) {
+            summary = `This is a small file with path ${src.src}`;
+        } else {
+            console.log(`Summarizing ${src.src}... (${src.size} tokens, return max ${maxTokens})`);
 
-        const completion = await openai.createChatCompletion({
-            model: MODEL_NAME,
-            messages: [prompt],
-            max_tokens: maxTokens
-        });
-        const summary = completion.data.choices[0].message.content.trim();
-        const summarySize = encodeSize(summary);
-        console.log(summary, '\n\n', `[Summary has ${summarySize} tokens]`);
-        console.log('\n\n\n');
+            const completion = await openai.createChatCompletion({
+                model: MODEL_NAME,
+                messages: [prompt],
+                max_tokens: maxTokens
+            });
+
+            summary = completion.data.choices[0].message.content.trim();
+            const summarySize = encodeSize(summary);
+            console.log(summary, '\n\n', `[Summary has ${summarySize} tokens]`);
+            console.log('\n\n\n');
+        }
 
         fileSummaries.push({
             src: src.src,
